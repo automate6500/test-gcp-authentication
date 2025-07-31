@@ -11,7 +11,7 @@ jobs:
 
     env:
       LOCAL_IMAGE: ghcr.io/${{ github.repository }}:${{ github.sha }}
-      GCP_IMAGE: us-central1-docker.pkg.dev/learning-github-actions-2025/web-app-2/mascot-api@sha256:5035782a918a041a3ff6199f21e00404cb73b89cb0edc02c10dc9b58a84b043d
+      GCP_IMAGE: us-central1-docker.pkg.dev/learning-github-actions-2025/web-app-2/mascot-api:37f23d048fcc188b26656613ac15b418c9d79bad
     steps:
     - uses: actions/checkout@v4
     - name: Authenticate to Google Cloud
