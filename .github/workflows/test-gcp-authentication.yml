@@ -1,0 +1,46 @@
+name: Test GCP Authentication
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read
+      id-token: write
+
+    env:
+      LOCAL_IMAGE: ghcr.io/${{ github.repository }}:${{ github.sha }}
+      GCP_IMAGE: us-central1-docker.pkg.dev/learning-github-actions-2025/web-app-2/mascot-api@sha256:5035782a918a041a3ff6199f21e00404cb73b89cb0edc02c10dc9b58a84b043d
+    steps:
+    - name: Authenticate to Google Cloud
+      id: auth
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+        service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+    - name: Set up Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Get Session Information
+      run: gcloud info
+
+    - name: Configure Docker
+      run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
+
+    - name: Deploy to Cloud Run service
+      uses: google-github-actions/deploy-cloudrun@v2
+      with:
+        service: mascot-api
+        region: ${{ secrets.GCP_REGION }}
+        image: ${{ env.GCP_IMAGE }}
+        flags: '--allow-unauthenticated'
+
+    - name: Test the Live Application
+      run: |
+        DEPLOY_URL=$(gcloud run services describe $SERVICE_NAME --platform=managed --region=${{ secrets.GCP_REGION }} | grep https)
+        echo "Testing DEPLOY_URL: ${DEPLOY_URL}"
+        curl --silent --fail ${DEPLOY_URL}/health
+        curl --silent --fail ${DEPLOY_URL}/05024756-765e-41a9-89d7-1407436d9a58
